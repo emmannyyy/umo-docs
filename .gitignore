@@ -45,3 +45,11 @@ pnpm-lock.yaml
 # Other
 .DS_Store
 Thumbs.db
+
+# Umodocs directory
+umodocs/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
