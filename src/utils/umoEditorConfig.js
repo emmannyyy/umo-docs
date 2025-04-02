@@ -497,7 +497,28 @@ export const umoEditorConfig = {
     maxSize: 104857600
   },
   user: {},
-  extensions: [],
+  extensions: [
+    {
+      name: 'image',
+      options: {
+        // Enable inline editing and toolbar for images
+        inline: true,
+        allowBase64: true,
+        defaultSize: {
+          width: 'auto',
+          height: 'auto'
+        },
+        // Enable resizing
+        resizable: true,
+        // Enable alignment controls
+        alignable: true,
+        // Default allowed alignments
+        allowedAlignments: ['left', 'center', 'right'],
+        // Enable caption
+        enableCaption: true
+      }
+    }
+  ],
   translations: {
     en_US: {},
     zh_CN: {},
