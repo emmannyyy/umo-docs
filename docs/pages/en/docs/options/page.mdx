@@ -1,0 +1,99 @@
+import { Badge } from '/components/badge'
+
+# Page Configuration
+
+Used to configure the display and behavior of the Umo Editor page area.
+
+## Default Configuration
+
+```js
+{
+  page: {
+    defaultMargin: {
+      left: 3.18,
+      right: 3.18,
+      top: 2.54,
+      bottom: 2.54,
+    },
+    defaultOrientation: 'portrait',
+    defaultBackground: '#fff',
+    showBreakMarks: true,
+    showBookmark: false,
+    watermark: {
+      type: 'compact',
+      alpha: 0.2,
+      fontColor: '#000',
+      fontSize: 16,
+      fontFamily: 'SimSun',
+      fontWeight: 'normal',
+      text: '',
+    },
+  },
+}
+```
+
+## Configuration Description
+
+### page.defaultMargin
+
+**Description**: Default page margins, modifiable by the user, measured in centimeters (cm). You can dynamically modify the page margins using the [`setPage`](../methods#setpage).
+
+**Type**: `Object`
+
+**Default Value**: `{ left: 3.18, right: 3.18, top: 2.54, bottom: 2.54 }`
+
+### page.defaultOrientation
+
+**Description**: Default page orientation, modifiable by the user. You can dynamically modify the page orientation using the [`setPage`](../methods#setpage).
+
+**Type**: `String`
+
+**Default Value**: `portrait`, prior to version 2.0.0 it was `horizontal`.
+
+**Options**: `portrait` and `landscape`, prior to version 2.0.0 it was `horizontal` and `vertical`.
+
+### page.defaultBackground
+
+**Description**: Default page background color, modifiable by the user. You can dynamically modify the page background color using the [`setPage`](../methods#setpage).
+
+**Type**: `String`
+
+**Default Value**: `#fff`
+
+**Options**: Any valid [CSS color](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value) value.
+
+### page.showBreakMarks
+
+**Description**: Whether to display page break marks, modifiable by the user.
+
+**Type**: `Boolean`
+
+**Default Value**: `true`
+
+**Options**: `true`, `false`.
+
+### page.showBookmark 
+
+**Description**: Whether to display bookmarks, modifiable by the user. <Badge theme="success">Added in v6.0.0</Badge>
+
+**Type**: `Boolean`
+
+**Default Value**: `false`
+
+**Options**: `true`, `false`.
+
+### page.watermark
+
+**Description**: Default watermark settings, modifiable by the user. You can dynamically set or modify the page watermark using the [`setWatermark`](../methods#setwatermark).
+
+**Type**: `Object`
+
+**Options**:
+
+- `type`: `String`, watermark type, options are: `compact`, `spacious`.
+- `alpha`: `Number`, watermark transparency, options are: 0-1.
+- `fontColor`: `String`, font color, options are: any valid [CSS color](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value) value.
+- `fontSize`: `Number`, font size, measured in px.
+- `fontFamily`: `String`, font, any valid [CSS font-family](https://developer.mozilla.org/en-US/docs/Web/CSS/font-family) value.
+- `fontWeight`: `String`, font weight, options are: `normal`, `bold`, `bolder`.
+- `text`: `String`, watermark content, recommended to be within 30 characters.

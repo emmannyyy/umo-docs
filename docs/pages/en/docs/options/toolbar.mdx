@@ -1,0 +1,85 @@
+import { Badge } from '/components/badge'
+
+# Toolbar Configuration
+
+Used to configure the display and behavior of the Umo Editor toolbar area.
+
+## Default Configuration
+
+```js
+{
+  toolbar: {
+    defaultMode: 'ribbon',
+    // enableSourceEditor: true, removed in v6.0.0
+    menus: ['base', 'insert', 'table', 'tools', 'page', 'export'],
+    disableMenuItems: [],
+    importWord: {
+      enabled: true,
+      options: {},
+      useCustomMethod: false,
+    },
+  },
+}
+```
+
+## Configuration Options
+
+### toolbar.defaultMode
+
+**Description**: The default mode of the toolbar. After configuration, users can still switch modes themselves, and their choice will be saved locally. By default, the toolbar uses the mode selected by the user, but you can still force a change using the [`setToolbar`](../methods#settoolbar).
+
+**Type**: `String`
+
+**Default Value**: `ribbon`
+
+**Options**: `ribbon`, `classic`
+
+### toolbar.enableSourceEditor
+
+**Description**: Whether to enable the editor's source code mode. In source code mode, users can edit the source code and preview the effects. This is suitable for developers with programming skills and is not recommended for general users. <Badge theme="danger">Removed in v6.0.0</Badge>
+
+**Type**: `Boolean`
+
+**Default Value**: `false`
+
+### toolbar.menus
+
+**Description**: The list of toolbar menus to enable. By default, all menus are enabled. You can disable some menus by configuring this option, but disabling all menus is not supported, and the `base` menu must be included.
+
+**Type**: `Array`
+
+**Default Value**: `['base', 'insert', 'table', 'tools', 'page', 'export']`
+
+**Options**: `base`, `insert`, `table`, `tools`, `page`, `export`
+
+### toolbar.disableMenuItems
+
+**Description**: Menu items to disable. By default, no menu items are disabled.
+
+**Type**: `Array`
+
+**Default Value**: `[]`
+
+**Options**: `highlight`, `ordered-list`, `bullet-list`, `task-list`, `line-height`, `margin`, `quote`, `code`, `select-all`, `markdown`, `print`, `link`, `image`, `video`, `audio`, `file`, `code-block`, `symbol`, `chineseDate`, `emoji`, `math`, `tag`, `columns`, `callout`, `mention`, `bookmark`, `hard-break`, `hr`, `toc`, `textBox`, `template`, `webPage`, `qrcode`, `barcode`, `signature`, `seal`, `diagrams`, `echarts`, `mermaid`, `chineseCase`, ...
+
+### toolbar.importWord <Badge theme="success">Added in v3.1.0</Badge>
+
+**Description**: Configuration related to importing Word documents.
+
+**Type**: `Object`
+
+**Default Value**:
+
+```js
+{
+  enabled: true, 
+  options: {},
+  useCustomMethod: false,
+}
+```
+**Options**:
+
+- `enabled`: Whether to enable the Word file import feature. Default is `true`.
+- `options`: Configuration options for Mammoth. For details, see [Mammoth](https://www.npmjs.com/package/mammoth#api).
+- `useCustomMethod`: Whether to use a custom method to import Word files. By configuring this option, you can use a custom method to import Word files. Default is `false`. If set to `true`, the [`onCustomImportWordMethod`](./methods#oncustomimportwordmethod) method will be used to import Word documents.
+

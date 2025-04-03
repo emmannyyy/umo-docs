@@ -1,0 +1,39 @@
+# Diagrams Configuration
+
+[diagrams.net](https://app.diagrams.net/) is a popular online diagram and flowchart tool. It provides an easy-to-use interface for creating various types of diagrams. Its main features include being free and open-source, supporting multiple diagram types, and respecting user privacy.
+
+Umo Editor integrates the diagrams.net API, allowing users to create diagrams directly within Umo Editor.
+
+You can also deploy diagrams.net separately and modify Umo Editor's configuration to use your own diagrams.net.
+
+## Default Configuration
+
+```js
+{
+  diagrams: {
+    domain: 'https://embed.diagrams.net',
+    // https://www.drawio.com/doc/faq/supported-url-parameters
+    params: {},
+  },
+}
+```
+
+## Configuration Description
+
+### diagrams.domain
+
+**Description**: Configures the domain for embed.diagrams.net.
+
+**Type**: `String`
+
+**Default Value**: `https://embed.diagrams.net`.
+
+**Optional Values**: `https://embed.diagrams.net` or the URL of a self-hosted diagrams.net service.
+
+### diagrams.params
+
+**Description**: Configures the URL parameters for `diagrams.domain`.
+
+**Type**: `Object`
+
+**Configuration Items**: Refer to: https://www.drawio.com/doc/faq/supported-url-parameters, configured in `Object` format.

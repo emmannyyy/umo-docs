@@ -1,0 +1,79 @@
+import { Tabs } from 'nextra/components'
+
+# Document Template Configuration
+
+Used to preset document templates. After presetting, users can select the preset templates to quickly insert them into documents, such as work logs, project plans, meeting notes, etc.
+
+## Default Configuration
+
+```js
+{
+  templates: [],
+}
+```
+
+## Configuration Description
+
+### templates
+
+**Description**: After presetting templates, users can select the preset templates to quickly insert them into documents.
+
+**Type**: `Array`
+
+**Default Value**: `[]`
+
+**Example**:
+
+<Tabs items={['Global Configuration', 'SFC Configuration']}>
+<Tabs.Tab>
+```js
+{
+  templates: [
+    {
+      title: 'Work Task',
+      description: 'Work task template',
+      content: '<p>Work Task</p>',
+    },
+    {
+      title: 'Weekly Report',
+      description: 'Weekly report template',
+      content: '<h2>Work Task</h2>',
+    },
+  ]
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```vue
+<template>
+  <umo-editor 
+    :templates="templates" 
+  />
+</template>
+ 
+<script setup>
+import { ref } from 'vue'
+import { UmoEditor } from '@umoteam/editor'
+
+const templates = ref([
+    {
+      title: 'Work Task',
+      description: 'Work task template',
+      content: '<p>Work Task</p>',
+    },
+    {
+      title: 'Weekly Report',
+      description: 'Weekly report template',
+      content: '<h2>Work Task</h2>',
+    },
+  ])
+</script>
+```
+</Tabs.Tab>
+</Tabs>
+
+**Configuration Items**:
+
+- `item.name`: String, template name, preferably within 12 characters.
+- `item.description`: String, template description, preferably within 60 characters.
+- `item.content`: Template content, valid HTML format or other valid [Tiptap document](https://tiptap.dev/docs/editor/guide/output).

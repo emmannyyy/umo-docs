@@ -1,0 +1,430 @@
+import { Badge } from '/components/badge'
+
+# Methods List
+
+This section introduces the methods of Umo Editor. With the methods provided by Umo Editor, you can perform some routine operations on Umo Editor. You can visit [https://demo.umodoc.com/editor?pane=events&lang=en-US](https://demo.umodoc.com/editor?pane=events&lang=en-US), click the corresponding method button, and view the usage of the method.
+
+## Example
+
+```vue
+<template>
+  <umo-editor
+    ref="editorRef"
+    v-bind="options"
+  />
+  <button @click="getOptions">Get Configuration</button>
+</template>
+ 
+<script setup>
+  import { ref } from 'vue';
+  import { UmoEditor } from '@umoteam/editor';
+
+  const editorRef = ref(null);
+  const options = ref({
+    // Configuration options
+    // ...
+  })
+
+  const getOptions = () => {
+    const options = editorRef.value.getOptions();
+    console.log(options);
+  }
+</script>
+```
+
+## Method Descriptions
+
+### getOptions
+
+**Description**: Get the configuration of Umo Editor.
+
+**Parameters**: None
+
+**Return Value**: Object, containing the configuration of Umo Editor.
+
+### setOptions
+
+**Description**: Set the configuration of Umo Editor.
+
+**Parameters**: Object, containing the configuration of Umo Editor.
+
+**Return Value**: Object, containing the configuration of Umo Editor.
+
+### setToolbar
+
+**Description**: Set the toolbar type of Umo Editor.
+
+**Parameters**: \{ mode, show \}
+
+- `mode`: String, toolbar type, optional values are `robbin`, `classic`.
+- `show`: Boolean, whether to show the toolbar.
+
+**Return Value**: None.
+
+### setPage
+
+**Description**: Set the page information of Umo Editor.
+
+**Parameters**: Object, containing the page information to be set.
+
+- `size`: String, page size, should be the `label` value provided in `dicts.pageSizes`, such as A4.
+- `orientation`: String, page orientation, optional values are `portrait`, `landscape`.
+- `background`: String, page background, a valid [CSS color](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value) value.
+
+**Return Value**: None.
+
+### setWatermark
+
+**Description**: Set the watermark information of Umo Editor.
+
+**Parameters**: Object, containing the watermark information to be set.
+
+- `type`: String, watermark type, optional values are: `compact`, `spacious`.
+- `alpha`: Number, watermark transparency, optional values are: 0-1.
+- `fontColor`: String, font color, optional values are: valid [CSS color](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value) values.
+- `fontSize`: Number, font size, in px.
+- `fontFamily`: Number, font, valid [CSS font-family](https://developer.mozilla.org/en-US/docs/Web/CSS/font-family) values.
+- `fontWeight`: String, font weight, optional values are: `normal`, `bold`, `bolder`.
+- `text`: String, watermark content, recommended not to exceed 30 characters.
+
+**Return Value**: None.
+
+### setDocument
+
+**Description**: Set the document information of Umo Editor.
+
+**Parameters**: Object, containing the document information to be set.
+
+- `title`: String, document title.
+- `bubbleMenu`: Boolean, whether to enable the bubble menu.
+- `blockMenu`: Boolean, whether to enable the block menu.
+- `markdown`: Boolean, whether to enable Markdown syntax.
+- `spellcheck`: Boolean, whether to enable browser spell check.
+
+**Return Value**: None.
+
+### setContent
+
+**Description**: Set the content of Umo Editor.
+
+**Parameters**:
+
+- `content`: Valid HTML format or other valid [Tiptap document](https://tiptap.dev/docs/editor/guide/output).
+- `options`:  // Added in v2.2.0
+  - `emitUpdate`: `true`, whether to trigger the update event.
+  - `focusPosition`: Focus position, optional values are: 'start' | 'end' | 'all' | number | boolean | null (false).
+  - `focusOptions`: `{ scrollIntoView: true }`.
+
+**Return Value**: None.
+
+### insertContent
+
+**Description**: Insert content at the current selected text position. <Badge theme="success">Added in v6.0.0</Badge>
+
+**Parameters**:
+
+- `content`: Valid HTML format or other valid [Tiptap document](https://tiptap.dev/docs/editor/guide/output).
+- `options`: 
+  - `updateSelection`: `true`, whether to update the selection.
+  - `focusPosition`: Focus position, optional values are: 'start' | 'end' | 'all' | number | boolean | null (false).
+  - `focusOptions`: `{ scrollIntoView: true }`.
+
+**Return Value**: None.
+
+### setContentTypeWriter
+
+**Description**: Insert content with a typewriter effect. <Badge theme="success">Added in v6.0.0</Badge>
+
+**Parameters**:
+
+- `content`: Valid [Tiptap JSON document](https://tiptap.dev/docs/editor/guide/output).
+- `options`: 
+  - `timerCount`: `Number`, interval time for the typewriter effect.
+  - `state`: `Number`, typewriter state, optional values are: `0`: start; `1`: refresh; `2`: stop; `3`: restart; `4`: clear typewriter.
+
+**Return Value**: None.
+
+### setLocale 
+
+**Description**: Set the display language of Umo Editor. <Badge theme="success">Added in v2.0.0</Badge>
+
+**Parameters**: `zh-CN` or `en-US`.
+
+**Return Value**: None.
+
+### setTheme 
+
+**Description**: Set the theme of Umo Editor. <Badge theme="success">Added in v2.1.0</Badge>
+
+**Parameters**: `light`, `dark`, `auto`.
+
+**Return Value**: None.
+
+### getPage 
+
+**Description**: Get the page configuration information of Umo Editor. <Badge theme="success">Added in v5.0.0</Badge>
+
+**Parameters**: None.
+
+**Return Value**: Page configuration information.
+
+### setPage 
+
+**Description**: Set the page configuration information of Umo Editor. <Badge theme="success">Added in v5.0.0</Badge>
+
+**Parameters**: Page configuration information.
+
+**Return Value**: None.
+
+### getContent 
+
+**Description**: Get the content of Umo Editor.
+
+**Parameters**: String, optional values are `html`, `json`, `text`.
+
+**Return Value**: `html`, `json`, `text`.
+
+### getContentExcerpt
+
+**Description**: Get the content excerpt of Umo Editor.
+
+**Parameters**:
+
+- `charLimit`: Number, excerpt length, default is 100 characters.
+- `more`: String, excerpt ending, default is ` ...`.
+
+**Return Value**: Document excerpt.
+
+### getHTML
+
+**Description**: Get the HTML content of Umo Editor.
+
+**Parameters**: None.
+
+**Return Value**: `html`.
+
+### getJSON
+
+**Description**: Get the JSON content of Umo Editor.
+
+**Parameters**: None.
+
+**Return Value**: `JSON`.
+
+### getText
+
+**Description**: Get the text content of Umo Editor.
+
+**Parameters**: None.
+
+**Return Value**: Text.
+
+### getImage
+
+**Description**: Get the page screenshot of Umo Editor.
+
+**Parameters**: String, optional values are `blob`, `jpeg`, `png`.
+
+**Return Value**: Image information.
+
+### saveContent
+
+**Description**: Save the content of Umo Editor.
+
+**Parameters**: Boolean, whether to show a success message.
+
+**Return Value**: None.
+
+### getEditor
+
+**Description**: Get the Vue instance of the Editor.
+
+**Parameters**: None.
+
+**Return Value**: Vue instance of Tiptap Editor.
+
+### useEditor
+
+**Description**: Get the instance of the Editor. <Badge theme="success">Added in v4.6.0</Badge>
+
+**Parameters**: None.
+
+**Return Value**: Tiptap Editor instance.
+
+### getTableOfContents 
+
+**Description**: Get the page outline. For more page outline information, you can get the editor instance through `getEditor()` and then access `editor.storage.tableOfContents`. <Badge theme="success">Added in v3.0.0</Badge>
+
+**Parameters**: None.
+
+**Return Value**:
+```js
+[
+  {
+    dom: HTMLElement, // The HTML element corresponding to the current anchor
+    editor: Editor, // Editor instance
+    id: String, // Node ID
+    isActive: Boolean, // Whether the current anchor is active
+    isScrolledOver: Boolean, // Whether this anchor has been scrolled over
+    itemIndex: Number, // Item index at the current level
+    level: Number, // Current level of the item - this may differ from the actual anchor level, used for rendering hierarchy from high to low
+    node: Node, // ProseMirror node corresponding to the current anchor
+    originalLevel: Number, // Actual level
+    pos: Number, // Position of the anchor node
+    textContent: String // Text content of the anchor
+  }
+]
+```
+
+### getSelectionText 
+
+**Description**: Get the text content of the currently selected text. <Badge theme="success">Added in v3.0.0</Badge>
+
+**Parameters**: None.
+
+**Return Value**: None.
+
+### getSelectionNode
+
+**Description**: Get the information of the currently selected node. Starting from version v6.0.0, it has been adjusted to get the currently selected node instead of the ancestor node of the currently selected node (i.e., the child node of the document node). <Badge theme="success">Added in v3.0.0</Badge>
+
+**Parameters**: None.
+
+**Return Value**: Tiptap Node.
+
+### setCurrentNodeSelection
+
+**Description**: Used to select the entire node at the current focus position. For example, when the cursor is in a cell of a table, calling this method will select the entire table. <Badge theme="success">Added in v3.1.0</Badge>
+
+**Parameters**: None.
+
+**Return Value**: None.
+
+### deleteSelectionNode
+
+**Description**: Delete the currently selected node. Starting from version v6.0.0, it has been adjusted to delete the currently selected node instead of the ancestor node of the currently selected node (i.e., the child node of the document node). <Badge theme="success">Added in v3.0.0</Badge>
+
+**Parameters**: None.
+
+**Return Value**: None.
+
+### getLocale 
+
+**Description**: Return the display language of Umo Editor. <Badge theme="success">Added in v2.0.0</Badge>
+
+**Parameters**: None.
+
+**Return Value**: `zh-CN` or `en-US`.
+
+### getI18n 
+
+**Description**: Return the [`vue-i18n`](https://vue-i18n.intlify.dev/guide/introduction.html) instance. <Badge theme="success">Added in v2.0.0</Badge>
+
+**Parameters**: None.
+
+**Return Value**: `vue-i18n`.
+
+### setReadOnly
+
+**Description**: Set the read-only state of Umo Editor.
+
+**Parameters**: Boolean, whether to be read-only.
+
+**Return Value**: None.
+
+### print
+
+**Description**: Print the page. <Badge theme="success">Added in v1.1.0</Badge>
+
+**Parameters**: None.
+
+**Return Value**: None.
+
+### focus
+
+**Description**: Make Umo Editor gain focus.
+
+**Parameters**:
+
+- `position`: 'start' | 'end' | 'all' | number | boolean | null (false)
+- `options`: \{ scrollIntoView: boolean \} // Added in v2.2.0
+
+**Return Value**: None.
+
+### blur
+
+**Description**: Make Umo Editor lose focus.
+
+**Parameters**: None.
+
+**Return Value**: None.
+
+### toggleFullscreen
+
+**Description**: Toggle the fullscreen state of Umo Editor (viewport fullscreen, not browser fullscreen). <Badge theme="success">Added in v6.0.0</Badge>
+
+**Parameters**: None.
+
+**Return Value**: None.
+
+### getAllBookmarks
+
+**Description**: Return all bookmarks in the document. <Badge theme="success">Added in v6.0.0</Badge>
+
+**Parameters**: None.
+
+**Return Value**: `Array`, an array of bookmark names.
+
+### focusBookmark
+
+**Description**: Focus on the specified bookmark position. <Badge theme="success">Added in v6.0.0</Badge>
+
+**Parameters**: `bookmarkName`, String, bookmark name.
+
+**Return Value**: `Boolean`, whether the setting was successful.
+
+### setBookmark
+
+**Description**: Set a bookmark. <Badge theme="success">Added in v6.0.0</Badge>
+
+**Parameters**: `bookmarkName`, String, bookmark name.
+
+**Return Value**: `Boolean`, whether the setting was successful.
+
+### deleteBookmark
+
+**Description**: Delete the specified bookmark. <Badge theme="success">Added in v6.0.0</Badge>
+
+**Parameters**: `bookmarkName`, String, bookmark name.
+
+**Return Value**: `Boolean`, whether the deletion was successful.
+
+### useAlert
+
+**Description**: Use the alert box of Umo Editor.
+
+**Parameters**: `options`, object, related configuration of [TDesign Next Dialog](https://tdesign.tencent.com/vue-next/components/dialog-en?tab=api).
+
+**Return Value**: TDesign Next Dialog instance.
+
+### useConfirm
+
+**Description**: Use the confirmation box of Umo Editor.
+
+**Parameters**: `options`, object, related configuration of [TDesign Next Dialog](https://tdesign.tencent.com/vue-next/components/dialog-en?tab=api).
+
+**Return Value**: TDesign Next Dialog instance.
+
+### useMessage
+
+**Description**: Use the message prompt of Umo Editor.
+
+**Parameters**:
+- `type`: String, message type, optional values are `success`, `warning`, `error`, `info`.
+- `options`: Related configuration of [TDesign Next Message](https://tdesign.tencent.com/vue-next/components/message-en?tab=api).
+
+**Return Value**: TDesign Next Message instance.
+
+## More Methods
+
+Umo Editor is implemented based on [Tiptap](https://tiptap.dev/). For more internal methods of Tiptap, please refer to [Tiptap Editor](./tiptap).

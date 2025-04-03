@@ -1,0 +1,106 @@
+import { Callout } from 'nextra/components'
+
+# Quick Start
+
+Umo-Editor is a document editor based on Vue3.
+You can visit [https://demo.umodoc.com/editor](https://demo.umodoc.com/editor?lang=en-US) to experience and test some features of Umo-Editor.
+
+## Installation
+
+### Install with NPM
+
+```sh npm2yarn
+npm install --save @umoteam/editor
+```
+
+<Callout type="warning" emoji="⚠️">
+**Note**: Starting from version v3.0, Umo Editor no longer supports the UMD version.
+</Callout>
+
+## Usage
+
+Choose any of the following methods:
+
+### Global Installation
+```js filename="main.js"
+import { createApp } from 'vue';
+import { useUmoEditor } from '@umoteam/editor';
+
+const app = createApp(App);
+app.use(useUmoEditor, {
+  // Configuration options
+  // ...
+});
+app.mount('#app');
+```
+
+### Direct Inclusion
+
+Choose either of the following examples using Composition API or Options API in JS.
+
+```vue filename="component.vue"
+<template>
+  <umo-editor v-bind="options" />
+  <!-- Or -->
+  <!-- 
+  <umo-editor 
+    :editor-key="options.editorKey" 
+    ... 
+  /> -->
+</template>
+
+// Using Composition API
+<script setup>
+  import { ref } from 'vue'
+  import { UmoEditor } from '@umoteam/editor';
+
+  const options = ref({
+    // Configuration options
+    // ...
+  });
+</script>
+
+// Or using Options API
+<script>
+  import { UmoEditor } from '@umoteam/editor';
+
+  export default {
+    components: {
+      UmoEditor
+    },
+    data() {
+      return {
+        options: {
+          // Configuration options
+          // ...
+        }
+      }
+    }
+  }
+</script>
+```
+
+### Usage in Nuxt3
+
+Umo Editor does not currently support SSR. In Nuxt3, when in SSR mode, you can use the `<client-only>` component to ensure that Umo Editor is rendered and used on the client side.
+
+```vue {2,4} filename="component.vue"
+<template>
+  <client-only>
+    <umo-editor v-bind="options" />
+  </client-only>
+</template>
+
+<script setup>
+  import { UmoEditor } from '@umoteam/editor';
+
+  const options = ref({
+    // Configuration options
+    // ...
+  });
+</script>
+```
+
+## Configuration
+
+See the [Default Configuration](./options/default).

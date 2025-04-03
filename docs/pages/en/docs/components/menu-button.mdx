@@ -1,0 +1,174 @@
+# Menu Button Component
+
+The menu button component is used to display buttons and perform actions on menus. It is commonly used in toolbar menus, bubble menus, and block menus.
+
+## Example
+
+See: https://demo.umodoc.com/components?lang=en-US
+
+## Usage
+
+```vue
+<template>
+  <umo-menu-button
+    :ico="demoIcon"
+    text="Example Button"
+  />
+</template>
+
+<script setup>
+import { UmoMenuButton } from '@umoteam/editor'
+
+const demoIcon = `<svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6H8a2 2 0 0 0-2 2v8M16 42H8a2 2 0 0 1-2-2v-8M32 42h8a2 2 0 0 0 2-2v-8M32 6h8a2 2 0 0 1 2 2v8M32 24H16M24 32V16" stroke="var(--umo-error-color)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+</script>
+```
+
+## Props
+
+### menuType
+
+**Description**: Type of menu
+
+**Options**: `button`, `dropdown`, `select`, `popup`
+
+**Type**: `String`
+
+**Default**: `button`
+
+### huge
+
+**Description**: Whether to display as a large button
+
+**Type**: `Boolean`
+
+**Default**: `false`
+
+### ico
+
+**Description**: SVG icon for the menu, must be valid HTML
+
+**Type**: `string`
+
+**Default**: `-`
+
+### text
+
+**Description**: Text displayed on the menu. If `tooltip` is not `false`, the value of `text` will also appear in the tooltip.
+
+**Type**: `string`
+
+**Default**: `''`
+
+### hideText
+
+**Description**: Whether to hide the menu text
+
+**Type**: `Boolean`
+
+**Default**: `false`
+
+### tooltip
+
+**Description**: Tooltip text for the menu. If set to `false`, the tooltip will not be displayed.
+
+**Type**: `[String, Boolean]`
+
+**Default**: `undefined`
+
+### shortcut
+
+**Description**: Shortcut key name bound to the menu, displayed in the `tooltip`. Umo Editor internally handles the display of shortcut keys on different platforms, e.g., `Ctrl+Shift+X` will appear as `⌘+⇧+X` on macOS.
+
+**Type**: `String`
+
+**Default**: `undefined`
+
+### shortcutText
+
+**Description**: Shortcut key displayed directly on the menu. Typically, `hideText` should be set to `false`, and the displayed shortcut key style should be handled. This is useful for block menus and context menus.
+
+**Type**: `String`
+
+**Default**: `undefined`
+
+### selectOptions
+
+**Description**: Configuration for dropdown items when `menuType` is `select` or `dropdown`.
+
+**Type**: `Array`
+
+**Default**: `-`
+
+### selectValue
+
+**Description**: Selected value of the menu when `menuType` is `select`.
+
+**Type**: `[String, Number]`
+
+**Default**: `-`
+
+### popupVisible
+
+**Description**: Whether the popup is visible when `menuType` is `popup`.
+
+**Type**: `Boolean`
+
+**Default**: `false`
+
+### popupHandle
+
+**Description**: Determines which area of the menu button opens the popup when clicked. Defaults to clicking the entire button.
+
+**Options**: `arrow`, meaning clicking the arrow opens the popup.
+
+**Type**: `Boolean`
+
+**Default**: `false`
+
+### menuActive
+
+**Description**: Whether the menu button is in an active state.
+
+**Type**: `Boolean`
+
+**Default**: `false`
+
+### disabled
+
+**Description**: Whether the menu button is disabled.
+
+**Type**: `Boolean`
+
+**Default**: `false`
+
+### Others
+
+Umo Editor uses [TDesign Vue Next](https://tdesign.tencent.com/vue-next/overview-en) as its base component library. The menu button supports most of the properties of TDesign Vue Next components.
+
+## Slots
+
+### default
+
+**Description**: Default slot for the menu button, which can contain the content of the menu button, including the default content of `select`, `dropdown`, and `popup` components.
+
+### dropmenu
+
+**Description**: Content of the dropdown menu when `menuType` is `dropdown`. See: https://tdesign.tencent.com/vue-next/components/dropdown-en?tab=api
+
+### content
+
+**Description**: Content of the popup when `menuType` is `popup`. See: https://tdesign.tencent.com/vue-next/components/popup-en?tab=api
+
+### Others
+
+Umo Editor uses [TDesign Vue Next](https://tdesign.tencent.com/vue-next/overview-en) as its base component library. The menu button supports most of the slots of TDesign Vue Next components.
+
+## Events
+
+### menuClick
+
+**Description**: Triggered when the menu button is clicked.
+
+### Others
+
+Umo Editor uses [TDesign Vue Next](https://tdesign.tencent.com/vue-next/overview-en) as its base component library. The menu button supports most of the events of TDesign Vue Next components.

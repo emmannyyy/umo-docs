@@ -1,0 +1,23 @@
+# Share Link Configuration
+
+Used to configure the share link. By default, it is the current page URL. In cases where the edit and preview URLs differ or in other scenarios, you can specify the share link by configuring `shareUrl`.
+
+## Default Configuration
+
+```js
+{
+  shareUrl: location?.href || '',
+}
+```
+
+## Configuration Options
+
+### shareUrl
+
+**Description**: The share link.
+
+**Type**: `String`
+
+**Default Value**: `location?.href || ''
+
+**Option**: A valid [URL](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/What_is_a_URL) value.
