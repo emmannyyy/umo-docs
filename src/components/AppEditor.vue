@@ -1,5 +1,11 @@
 <template>
   <div class="app-container">
+    <!-- Loading Overlay -->
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Loading Document...</p>
+    </div>
+    
     <!-- Document Header -->
     <div class="document-header">
       <div class="document-title-container">
@@ -14,7 +20,12 @@
     </div>
     
     <!-- Editor -->
-    <umo-editor ref="editorRef" v-bind="umoEditorConfig" @save="onSave">
+    <umo-editor 
+      ref="editorRef" 
+      v-bind="umoEditorConfig" 
+      @save="onSave"
+      @created="onEditorCreated" 
+    >
       <!-- Home menu slot-->
       <template #toolbar_base="props">
         <span>
@@ -149,10 +160,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { saveDocument, getDocumentById } from '../services/documentService'
 import { umoEditorConfig } from '../utils/umoEditorConfig'
+// NOTE: UmoEditor is now globally registered via app.use() in main.js
 
 // Component props
 const props = defineProps({
@@ -167,418 +179,376 @@ const emit = defineEmits(['document-loaded'])
 
 const router = useRouter()
 
-// Add success notification system
+// Notification state
 const showNotification = ref(false)
 const notificationMessage = ref('')
 const notificationType = ref('success')
 
-// Editor reference
-const editorRef = ref(null)
+// Editor related refs and state
+const editorRef = ref(null) // Template ref for the <umo-editor> component
+const isEditorReady = ref(false) // Flag to track editor readiness via @created
+const isLoading = ref(false) // Loading indicator state
 
-// Show a notification message to the user
+// Temporary state for data loaded *before* editor re-renders
+const pendingContent = ref(null)
+const pendingPage = ref(null)
+const pendingDocInfo = ref(null)
+
+// Header/Footer/Title state
+const headerText = ref('Default Header Text')
+const logoUrl = ref('/vite.svg')
+const showModal = ref(false)
+const showTitleModal = ref(false)
+const tempHeaderText = ref('')
+const tempLogoUrl = ref('')
+const documentTitle = ref('Untitled Document')
+const tempDocumentTitle = ref('')
+
+// Document tracking
+const currentDocumentId = ref(null)
+
 const notify = (message, type = 'success', duration = 3000) => {
   notificationMessage.value = message
   notificationType.value = type
   showNotification.value = true
-  
-  // Auto-hide notification after duration
-  setTimeout(() => {
-    showNotification.value = false
-  }, duration)
+  setTimeout(() => { showNotification.value = false }, duration)
 }
 
-// Create a ref for the editor content
-const editorContent = ref('')
-// Header text ref
-const headerText = ref('I Love open source bro wtf FINALLY')
-// Logo URL ref
-const logoUrl = ref('/vite.svg')
-// Modal visibility state
-const showModal = ref(false)
-// Document title modal visibility
-const showTitleModal = ref(false)
-// Temporary input for the modal
-const tempHeaderText = ref('')
-const tempLogoUrl = ref('')
-
-// Document tracking
-const currentDocumentId = ref(null)
-const documentTitle = ref('Untitled Document')
-const tempDocumentTitle = ref('')
-
-// Load document by ID
-const loadDocument = async (id) => {
-  try {
-    if (!id) return
-    
-    console.log('Loading document:', id)
-    
-    // Get document from database
-    const document = await getDocumentById(id)
-    
-    if (!document) {
-      throw new Error('Document not found')
-    }
-    
-    // Store document ID
-    currentDocumentId.value = document.id
-    
-    // Set document title
-    if (document.title) {
-      documentTitle.value = document.title
-    }
-    
-    // Add a slight delay to ensure editor is ready
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    // Safeguard check for editor reference
-    if (!editorRef.value) {
-      console.error('Editor reference is not available')
-      throw new Error('Editor not initialized')
-    }
-    
-    // Log the available editor methods to help debugging
-    console.log('Available editor methods:', 
-      Object.keys(editorRef.value).filter(key => typeof editorRef.value[key] === 'function'))
-    
-    // Check if content exists
-    if (!document.content) {
-      console.warn('Document has no content, creating empty document')
-      editorRef.value.setContent(`<h1>${document.title || 'Untitled Document'}</h1>`, {
-        emitUpdate: true
-      })
+// --- Editor Event Handler (runs for the NEW instance) ---
+const onEditorCreated = () => { 
+  console.log(`UmoEditor @created event fired.`);
+  nextTick(() => {
+    console.log('Setting isEditorReady = true inside nextTick.');
+    isEditorReady.value = true;
+    // Trigger initial load *if* an ID is present when editor becomes ready
+    if (props.documentId) {
+      console.log('Editor ready, initial documentId present. Calling loadDocument.');
+      loadDocument(props.documentId);
     } else {
-      // Directly try to extract HTML content in a way that's most likely to succeed
-      let htmlContent = null
-      
-      if (typeof document.content === 'string') {
-        // If content is a string, use it directly
-        htmlContent = document.content
-        console.log('Using string content directly')
-      } else if (document.content.html) {
-        // If content has html property, use that
-        htmlContent = document.content.html
-        console.log('Using content.html property')
-      } else if (document.content.original) {
-        // Try using original
-        htmlContent = document.content.original
-        console.log('Using content.original property')
-      } else if (document.content.text) {
-        // Try text property
-        htmlContent = document.content.text
-        console.log('Using content.text property')
-      } else if (document.content.json) {
-        // For JSON, we'll handle it separately
-        console.log('Content appears to be JSON, handling specifically')
-      } else {
-        // Last resort
-        htmlContent = `<h1>${document.title || 'Untitled Document'}</h1><p>Content could not be parsed.</p>`
-        console.warn('No usable content found, using placeholder')
-      }
-      
-      // Load content into editor with fallback mechanisms
+      // New document, just focus
+      console.log('Editor ready, no initial documentId. Focusing for new document.');
+      editorRef.value?.focus('start', { scrollIntoView: false });
+      document.title = 'New Document - UmoEditor';
+    }
+  });
+};
+
+// --- Apply Pending Data (called after new editor instance is ready) ---
+const applyPendingData = () => {
+   if (!isEditorReady.value || !editorRef.value) {
+      console.error('Attempted to apply pending data, but editor not ready or ref missing.');
+      // Clear pending data to prevent stale application later?
+      pendingContent.value = null;
+      pendingPage.value = null;
+      pendingDocInfo.value = null;
+      return;
+   }
+   console.log('Applying pending content, page, and docInfo...');
+
+   let jsonContent = null;
+   let htmlContent = null;
+   let contentSetSuccessfully = false;
+
+   // Extract content from pending data
+   if (pendingContent.value) {
+      if (typeof pendingContent.value.json === 'object' && pendingContent.value.json !== null) jsonContent = pendingContent.value.json;
+      if (typeof pendingContent.value.html === 'string') htmlContent = pendingContent.value.html;
+   }
+
+   // Try setting content (JSON > HTML > Fallback)
+   if (jsonContent) {
       try {
-        if (htmlContent) {
-          // Try with most direct method first
-          console.log('Setting content with direct HTML')
-          editorRef.value.setContent(htmlContent)
-        } 
-        // If we have JSON content, try that
-        else if (document.content.json) {
-          const editor = editorRef.value.getEditor()
-          if (editor && editor._value) {
-            console.log('Setting content with JSON via editor commands')
-            editor._value.commands.setContent(document.content.json)
-          } else {
-            throw new Error('Editor instance not available for JSON content')
-          }
-        }
-      } catch (setContentError) {
-        // If the first attempt failed, try alternate method
-        console.error('First content setting attempt failed:', setContentError)
-        try {
-          // Try alternate method with HTML string
-          const simpleContent = `<h1>${document.title || 'Untitled Document'}</h1><p>Document loaded with recovery method.</p>`
-          console.log('Trying recovery with simple content')
-          editorRef.value.setContent(simpleContent)
-        } catch (recoveryError) {
-          console.error('Recovery attempt also failed:', recoveryError)
-          throw new Error('Could not set document content after multiple attempts')
-        }
-      }
-    }
-    
-    // Try to set page and document settings, but don't fail if these don't work
-    try {
-      if (document.page) {
-        console.log('Setting page options')
-        editorRef.value.setPage(document.page)
-      }
-      
-      if (document.document_info) {
-        console.log('Setting document options')
-        editorRef.value.setDocument(document.document_info)
-      }
-    } catch (settingsError) {
-      console.warn('Could not set page or document settings:', settingsError)
-      // Don't fail the whole loading process for this
-    }
-    
-    // Set header text and logo if available
-    if (document.header_text) {
-      headerText.value = document.header_text
-    }
-    
-    if (document.logo_url) {
-      logoUrl.value = document.logo_url
-    }
-    
-    // Show success message
-    notify(`Document "${documentTitle.value}" loaded successfully`)
-    console.log('Document loading completed successfully')
-    
-    // Notify parent
-    emit('document-loaded', {
-      id: document.id,
-      title: documentTitle.value
-    })
-  } catch (error) {
-    console.error('Error loading document:', error)
-    notify('Failed to load document. See console for details.', 'error')
+         editorRef.value.setContent(jsonContent, { emitUpdate: true });
+         contentSetSuccessfully = true;
+         console.log('Applied pending JSON content.');
+      } catch (jsonError) { console.error('Failed applying pending JSON:', jsonError); }
+   }
+   if (!contentSetSuccessfully && htmlContent) {
+      try {
+         editorRef.value.setContent(htmlContent, { emitUpdate: true });
+         contentSetSuccessfully = true;
+         console.log('Applied pending HTML content.');
+      } catch (htmlError) { console.error('Failed applying pending HTML:', htmlError); }
+   }
+   if (!contentSetSuccessfully) {
+      console.error('Failed applying pending content. Setting placeholder.');
+      const fallbackContent = `<h1>${documentTitle.value}</h1><p>Error applying content.</p>`;
+      try { editorRef.value.setContent(fallbackContent, { emitUpdate: true }); }
+      catch (fbError) { console.error('CRITICAL: Failed fallback setContent!', fbError); }
+   }
+
+   // Apply pending page/doc settings
+   try {
+      if (pendingPage.value) editorRef.value.setPage(pendingPage.value);
+      if (pendingDocInfo.value) editorRef.value.setDocument(pendingDocInfo.value);
+      console.log('Applied pending page/document settings.');
+   } catch (settingsError) { console.warn('Failed applying pending page/doc settings:', settingsError); }
+
+   // Focus
+   try {
+      editorRef.value.focus('end', { scrollIntoView: false });
+      console.log('Focused editor after applying pending data.');
+   } catch (focusError) { console.warn('Focus failed after applying pending data:', focusError); }
+
+   // Clear pending data now that it's applied
+   pendingContent.value = null;
+   pendingPage.value = null;
+   pendingDocInfo.value = null;
+
+   // Emit loaded event
+   notify(`Document "${documentTitle.value}" loaded successfully`);
+   document.title = `${documentTitle.value} - UmoEditor`;
+   emit('document-loaded', { id: currentDocumentId.value, title: documentTitle.value });
+}
+
+// --- Document Loading (initiates fetch and key change) ---
+const loadDocument = async (id) => {
+  // Prevent loading if editor isn't ready (shouldn't happen with new flow, but safe)
+  if (!isEditorReady.value) {
+    console.warn('loadDocument called, but editor not marked as ready. Aborting.');
+    return;
   }
-}
-
-// Create a new document
-const createNewDocument = () => {
-  // Reset document state
-  currentDocumentId.value = null
-  documentTitle.value = 'Untitled Document'
-  headerText.value = 'I Love open source bro wtf FINALLY'
-  logoUrl.value = '/vite.svg'
-  
-  // Clear editor content
-  if (editorRef.value) {
-    editorRef.value.setContent('')
+  if (!editorRef.value) {
+     console.error('loadDocument: editorRef is not available. Aborting.');
+     return;
   }
-  
-  // Notify parent
-  emit('document-loaded', {
-    id: null,
-    title: documentTitle.value
-  })
-  
-  // Update browser title
-  document.title = 'New Document - UmoEditor'
-}
-
-// Watch for changes in document ID prop
-watch(() => props.documentId, async (newId) => {
-  if (newId && newId !== currentDocumentId.value) {
-    currentDocumentId.value = newId
-    await loadDocument(newId)
-  } else if (!newId) {
-    // Reset to new document if no ID provided
-    createNewDocument()
+  if (!id) {
+     console.warn('loadDocument called with null/undefined ID. Aborting.');
+     return;
   }
-}, { immediate: true })
 
-// Print editor content
-const printEditorContent = () => {
-  const editorContent = editorRef.value.getContent()
-  console.log(editorRef.value.getOptions())
-  console.log(editorRef.value.getEditor())
-  console.log(editorContent)
-}
+  console.log(`Loading document: ${id}`);
+  isLoading.value = true; // Show loading indicator
 
-// Header functions
-const insertHeader = () => {
-  tempHeaderText.value = headerText.value
-  tempLogoUrl.value = logoUrl.value
-  showModal.value = true
-}
-
-const saveHeaderText = () => {
-  headerText.value = tempHeaderText.value
-  logoUrl.value = tempLogoUrl.value
-  showModal.value = false
-}
-
-const cancelHeaderEdit = () => {
-  showModal.value = false
-}
-
-// Helper function to save the current document
-const saveCurrentDocument = async () => {
-  if (!editorRef.value) return
-  
-  // Save current document with current state
-  await onSave(
-    editorRef.value.getContent(),
-    editorRef.value.getOptions().page,
-    editorRef.value.getOptions().document
-  )
-}
-
-// Document title functions
-const editDocumentTitle = () => {
-  tempDocumentTitle.value = documentTitle.value
-  showTitleModal.value = true
-}
-
-const saveDocumentTitle = () => {
-  documentTitle.value = tempDocumentTitle.value || 'Untitled Document'
-  showTitleModal.value = false
-  
-  // If we have a document ID, update the title in database too
-  if (currentDocumentId.value) {
-    saveCurrentDocument()
-  }
-  
-  // Update page title
-  document.title = `${documentTitle.value} - UmoEditor`
-}
-
-const cancelTitleEdit = () => {
-  showTitleModal.value = false
-}
-
-// Navigation functions
-const goToHome = () => {
-  router.push('/')
-}
-
-// Save document to Supabase
-const onSave = async (content, page, document) => {
   try {
-    console.log('Save requested with content:', content)
-    console.log('Page settings:', page)
-    console.log('Document info:', document)
+    const documentData = await getDocumentById(id);
+    if (!documentData) throw new Error('Document not found');
+
+    console.log('Document data fetched. Updating state...');
     
-    // Get content in multiple formats for better compatibility
-    let htmlContent = ''
-    let jsonContent = null
-    
-    if (editorRef.value) {
-      try {
-        htmlContent = editorRef.value.getHTML()
-        jsonContent = editorRef.value.getJSON()
-        console.log('Retrieved HTML content:', htmlContent.substring(0, 100) + '...')
-        console.log('Retrieved JSON content:', jsonContent)
-      } catch (err) {
-        console.error('Error getting editor content:', err)
-      }
+    // Update state BEFORE waiting for nextTick
+    currentDocumentId.value = documentData.id;
+    documentTitle.value = documentData.title || 'Untitled Document';
+    headerText.value = documentData.header_text || 'Default Header Text'; 
+    logoUrl.value = documentData.logo_url || '/vite.svg';
+    document.title = `${documentTitle.value} - UmoEditor`; // Update browser title early
+
+    // Wait for Vue to process state updates that might affect slots
+    await nextTick(); 
+    console.log('nextTick finished after state updates. Applying to editor...');
+
+    // Now interact with the editor
+    let jsonContent = null;
+    let htmlContent = null;
+    if (documentData.content) {
+        if (typeof documentData.content.json === 'object' && documentData.content.json !== null) jsonContent = documentData.content.json;
+        if (typeof documentData.content.html === 'string') htmlContent = documentData.content.html;
     }
-    
-    // Format the document data
+
+    let contentSetSuccessfully = false;
+    // Try JSON
+    if (jsonContent) {
+      try {
+        editorRef.value.setContent(jsonContent, { emitUpdate: true });
+        contentSetSuccessfully = true; console.log('Set content via JSON.');
+      } catch (e) { console.error('Failed JSON setContent:', e); }
+    }
+    // Try HTML
+    if (!contentSetSuccessfully && htmlContent) {
+      try {
+        editorRef.value.setContent(htmlContent, { emitUpdate: true });
+        contentSetSuccessfully = true; console.log('Set content via HTML.');
+      } catch (e) { console.error('Failed HTML setContent:', e); }
+    }
+    // Fallback
+    if (!contentSetSuccessfully) {
+      console.warn('Failed JSON/HTML setContent, using placeholder.');
+      try { editorRef.value.setContent(`<h1>${documentTitle.value}</h1>`, { emitUpdate: true }); }
+      catch (e) { console.error('CRITICAL: Failed fallback setContent!', e); }
+    }
+
+    // Apply settings
+    try {
+        if (documentData.page) editorRef.value.setPage(documentData.page);
+        if (documentData.document_info) editorRef.value.setDocument(documentData.document_info);
+        console.log('Applied page/document settings.');
+    } catch (e) { console.warn('Failed applying page/doc settings:', e); }
+
+    // Focus
+    try {
+        editorRef.value.focus('end', { scrollIntoView: false });
+        console.log('Focused editor.');
+    } catch (e) { console.warn('Failed to focus:', e); }
+
+    emit('document-loaded', { id: documentData.id, title: documentTitle.value });
+    notify(`Document "${documentTitle.value}" loaded`);
+
+  } catch (error) {
+    console.error('Error during loadDocument process:', error);
+    notify(`Failed to load document: ${error.message}`, 'error');
+    // Reset to a known state? 
+    // createNewDocument(); 
+  } finally {
+    isLoading.value = false; // Hide loading indicator
+    console.log('loadDocument finished.');
+  }
+};
+
+// --- Document Saving ---
+const onSave = async () => { 
+   if (!isEditorReady.value || !editorRef.value) {
+     console.error('Editor not ready or ref missing for saving.');
+     return false;
+   }
+   console.log('Save requested.');
+   try {
+      let htmlContent = editorRef.value.getHTML();
+      let jsonContent = editorRef.value.getJSON(); 
+      const currentOptions = editorRef.value.getOptions();
+      const currentPageSettings = currentOptions.page;
+      const currentDocumentSettings = currentOptions.document;
+
     const documentData = {
-      content: {
-        html: htmlContent,
-        json: jsonContent,
-        original: content // Keep the original content too
-      },
-      page,
-      document_info: document,
+         content: { html: htmlContent, json: jsonContent },
+         page: currentPageSettings, 
+         document_info: currentDocumentSettings, 
       header_text: headerText.value,
       logo_url: logoUrl.value,
       title: documentTitle.value,
-      // If you have authentication, add user_id here
-    }
-    
-    // If we have a document ID, include it for update
-    if (currentDocumentId.value) {
-      documentData.id = currentDocumentId.value
-    }
-    
-    console.log('Saving document data:', documentData)
-    
-    // Save to Supabase using the document service
-    const { data, error } = await saveDocument(documentData)
-    
-    if (error) {
-      console.error("Error saving document:", error)
-      notify('Failed to save document. See console for details.', 'error')
-      return false
-    }
-    
-    // Store the document ID for future updates
-    if (data && data.length > 0) {
-      currentDocumentId.value = data[0].id
-      console.log("Document saved successfully with ID:", currentDocumentId.value)
+         id: currentDocumentId.value || undefined 
+      };
       
-      // If this was a new document, update the URL
-      if (!props.documentId) {
-        router.replace(`/editor/${currentDocumentId.value}`)
+      console.log('Saving document data:', documentData);
+      const { data, error } = await saveDocument(documentData);
+      
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+         const savedId = data[0].id;
+         currentDocumentId.value = savedId; 
+         console.log("Document saved successfully with ID:", savedId);
+         if (!props.documentId || props.documentId !== savedId) {
+            router.replace(`/editor/${savedId}`); 
+         }
       }
-    }
-    
-    // Show success message
-    notify(`Document "${documentTitle.value}" saved successfully`)
-    console.log('Document saving completed successfully')
-    
-    return true
-  } catch (err) {
-    console.error("Failed to save document:", err)
-    notify('Failed to save document. See console for details.', 'error')
-    return false
-  }
-}
+      notify(`Document "${documentTitle.value}" saved successfully`);
+      return true;
+   } catch (err) {
+      console.error("Failed to save document:", err);
+      notify(`Failed to save document: ${err.message || 'Unknown error'}`, 'error');
+      return false;
+   }
+};
 
-// Predefined logo options for easy selection
+// --- Other Editor Interactions ---
+const printEditorContent = () => {
+  if (!isEditorReady.value || !editorRef.value) {
+    notify('Editor not ready.', 'info'); return;
+  }
+  console.log('Options:', editorRef.value.getOptions());
+  console.log('Content (HTML):', editorRef.value.getHTML());
+};
+
+const saveCurrentDocument = async () => {
+  if (!isEditorReady.value || !editorRef.value) {
+    console.warn('Attempted to saveCurrentDocument, but editor not ready.'); return; 
+  }
+  await onSave(); 
+};
+
+// --- Watch for Document ID Changes ---
+watch(() => props.documentId, (newId, oldId) => {
+  if (newId !== oldId) { 
+     console.log(`Document ID prop changed from ${oldId} to ${newId}.`);
+     // Only trigger if editor is ready, otherwise onEditorCreated handles initial load
+     if (isEditorReady.value) {
+        console.log('Editor is ready, proceeding with load/create.');
+         if (newId) {
+           loadDocument(newId);
+         } else {
+           createNewDocument();
+         }
+     } else {
+         console.log('Editor not ready yet. Initial load will be handled by onEditorCreated if needed.');
+     }
+  }
+});
+
+// --- UI Actions ---
+const createNewDocument = () => {
+  console.log('Creating new document state...');
+  currentDocumentId.value = null;
+  documentTitle.value = 'Untitled Document';
+  headerText.value = 'Default Header Text'; 
+  logoUrl.value = '/vite.svg';
+  document.title = 'New Document - UmoEditor';
+
+  if (isEditorReady.value && editorRef.value) {
+    console.log('Editor ready, clearing content and focusing for new document.');
+    try {
+        editorRef.value.setContent(''); 
+        editorRef.value.focus('start', { scrollIntoView: false }); 
+        // Optionally reset page/doc settings to defaults here if needed
+        // editorRef.value.setPage(umoEditorConfig.page || {}); 
+        // editorRef.value.setDocument(umoEditorConfig.document || {});
+    } catch (error) {
+        console.error('Error resetting editor for new document:', error);
+    }
+  } else {
+     console.warn("createNewDocument: Editor not ready yet.");
+     // Editor will be focused by onEditorCreated when it's ready
+  }
+  
+  if (props.documentId){
+      router.replace('/editor'); 
+  }
+  emit('document-loaded', { id: null, title: documentTitle.value });
+};
+
+const insertHeader = () => {
+  tempHeaderText.value = headerText.value;
+  tempLogoUrl.value = logoUrl.value;
+  showModal.value = true;
+};
+
+const saveHeaderText = () => {
+  headerText.value = tempHeaderText.value;
+  logoUrl.value = tempLogoUrl.value;
+  showModal.value = false;
+  // NOTE: Changes here won't reflect in the editor header/footer slots 
+  // until the *next* time the component re-renders via key change.
+  // If immediate update is needed, consider triggering saveCurrentDocument 
+  // and then forcing a key increment, though that might be jarring.
+};
+
+const cancelHeaderEdit = () => { showModal.value = false; };
+
+const editDocumentTitle = () => {
+  tempDocumentTitle.value = documentTitle.value;
+  showTitleModal.value = true;
+};
+
+const saveDocumentTitle = async () => { 
+  documentTitle.value = tempDocumentTitle.value || 'Untitled Document';
+  showTitleModal.value = false;
+  document.title = `${documentTitle.value} - UmoEditor`;
+
+  // REMOVED: await saveCurrentDocument(); 
+  // The title will be saved during the next regular onSave call.
+  console.log('Document title updated locally. It will be persisted on next full save.');
+};
+
+const cancelTitleEdit = () => { showTitleModal.value = false; };
+
+const goToHome = () => { router.push('/'); };
+
+// Predefined logo options
 const logoOptions = [
   { name: 'Vite', url: '/vite.svg' },
   { name: 'GitHub', url: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png' },
   { name: 'Vue', url: 'https://vuejs.org/images/logo.png' },
   { name: 'Open Source', url: 'https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2f4831e82472e9204de6edae9/topics/open-source/open-source.png' }
-]
-
-const tipTapEditor = ref(null)
-
-onMounted(() => {
-  // Wait for editor to initialize
-  setTimeout(() => {
-    if (editorRef.value) {
-      console.log('Editor initialized successfully')
-      tipTapEditor.value = editorRef.value.getEditor()
-      
-      // Fix passive event listeners warning
-      // Add passive event listeners to scrollable containers
-      const addPassiveListeners = () => {
-        try {
-          const scrollableElements = document.querySelectorAll('.umo-editor-container, .umo-editor-content, .umo-editor-page')
-          
-          scrollableElements.forEach(element => {
-            const originalAddEventListener = element.addEventListener
-            
-            element.addEventListener = function(type, listener, options) {
-              let passive = false
-              
-              // Make wheel and touch events passive
-              if (type === 'wheel' || type === 'touchstart' || type === 'touchmove') {
-                passive = true
-              }
-              
-              // Override options to include passive flag
-              const modifiedOptions = typeof options === 'object' 
-                ? { ...options, passive } 
-                : { passive, capture: !!options }
-              
-              return originalAddEventListener.call(this, type, listener, modifiedOptions)
-            }
-          })
-          
-          console.log('Passive event listeners applied to scrollable elements')
-        } catch (err) {
-          console.error('Error applying passive event listeners:', err)
-        }
-      }
-      
-      // Apply passive listeners after a short delay
-      setTimeout(addPassiveListeners, 500)
-    } else {
-      console.error('Editor failed to initialize')
-    }
-  }, 500)
-})
+];
 </script>
 
 <style scoped>
@@ -875,4 +845,34 @@ onMounted(() => {
 
 /* Add Font Awesome icons */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
+/* Add styles for loading overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1001; /* Ensure it's above editor but below modals? */
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #3498db;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style> 

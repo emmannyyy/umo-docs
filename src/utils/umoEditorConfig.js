@@ -393,7 +393,7 @@ export const umoEditorConfig = {
       preserveWhitespace: "full"
     },
     autoSave: {
-      enabled: true,
+      enabled: false,
       interval: 300000
     }
   },

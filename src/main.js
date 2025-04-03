@@ -7,7 +7,7 @@ import { umoEditorConfig } from './utils/umoEditorConfig'
 
 const app = createApp(App)
 
-// Register UmoEditor as a plugin
+// Register UmoEditor as a plugin with your configuration
 app.use(useUmoEditor, umoEditorConfig)
 
 // Use Vue Router
